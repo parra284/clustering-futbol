@@ -1,0 +1,23 @@
+# Python 3.13
+# Instalación:  pip install -r requirements.txt
+
+# --- Datos y cálculo ---
+pandas==3.0.5
+numpy==2.2.6
+scipy==1.18.0
+
+# --- Modelado ---
+scikit-learn==1.9.0
+joblib==1.5.3
+
+# --- Visualización ---
+matplotlib==3.11.1
+
+# --- Recolección de datos (solo si se vuelve a descargar de FBref) ---
+soccerdata==1.9.1
+
+# --- Dashboard ---
+streamlit==1.63.0
+
+# --- Notebooks ---
+ipykernel==7.3.0

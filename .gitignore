@@ -1,0 +1,27 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- Caché del scraper de soccerdata ---
+downloaded_files/
+soccerdata/
+
+# --- Streamlit ---
+.streamlit/
+
+# --- Sistema operativo / editores ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Nota: data/ y reports/ SÍ se versionan. Son el entregable y lo que hace que
+# cualquiera pueda reproducir el trabajo sin volver a descargar de FBref.
