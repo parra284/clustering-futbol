@@ -37,11 +37,16 @@ st.set_page_config(page_title="Perfiles de jugadores", page_icon="⚽", layout="
 
 @st.cache_data(show_spinner="Cargando resultados…")
 def cargar():
-    """Los cuatro CSV, sus valores por 90 y sus percentiles. Se calcula una sola vez."""
+    """Los cuatro CSV, sus valores por 90 y sus percentiles. Se calcula una sola vez.
+
+    `completo` es cada dataset con las variables por 90 ya añadidas como columnas: es lo
+    que permite ordenar la vista de exploración por cualquiera de ellas.
+    """
     datos = perfilado.cargar_etiquetados()
     por90 = {p: perfilado.tabla_por90(datos[p], p) for p in P.POSICIONES}
     pcts = {p: perfilado.percentiles(por90[p]) for p in P.POSICIONES}
-    return datos, por90, pcts
+    completo = {p: datos[p].join(por90[p]) for p in P.POSICIONES}
+    return datos, por90, pcts, completo
 
 
 @st.cache_data(show_spinner=False)
@@ -60,7 +65,7 @@ def tema_actual() -> dict:
 
 
 try:
-    DATOS, POR90, PCTS = cargar()
+    DATOS, POR90, PCTS, COMPLETO = cargar()
 except FileNotFoundError as e:
     st.error(str(e))
     st.stop()
@@ -77,6 +82,9 @@ AYUDA_CONFIANZA = (f"«baja» = jugó menos de {PART_CAMPO} partidos ({PART_GK} 
                    f"portero). Recibió etiqueta, pero no ayudó a definir los perfiles.")
 AYUDA_DISTANCIA = "Qué tan cerca está del arquetipo. Menor = encaja más limpio."
 
+# Etiqueta de la única opción de orden que no es una variable del modelo.
+MINUTOS_JUGADOS = "Minutos jugados"
+
 COLS_TABLA = {
     "player": "Jugador", "team": "Equipo", "league": "Liga", "pos": "Posición FBref",
     "age": "Edad", "Playing Time_Min": "Minutos", "perfil": "Perfil",
@@ -91,10 +99,19 @@ FORMATO_TABLA = {
 }
 
 
-def tabla_jugadores(d: pd.DataFrame, columnas: list[str]):
-    """Renderiza un bloque de jugadores con los nombres y formatos de siempre."""
+def tabla_jugadores(d: pd.DataFrame, columnas: list[str], destacar: str | None = None):
+    """Renderiza un bloque de jugadores con los nombres y formatos de siempre.
+
+    `destacar` es la columna por la que viene ordenada la tabla: si es una variable por
+    90 se le da formato numérico, porque si no Streamlit la muestra con todos sus
+    decimales y la columna deja de leerse.
+    """
+    config = dict(FORMATO_TABLA)
+    if destacar and destacar not in ("Playing Time_Min",):
+        config[destacar] = st.column_config.NumberColumn(
+            format="%.2f", help="Variable del modelo, por 90 minutos.")
     st.dataframe(d[columnas].rename(columns=COLS_TABLA), hide_index=True,
-                 width="stretch", column_config=FORMATO_TABLA)
+                 width="stretch", column_config=config)
 
 
 st.title("⚽ Perfiles de jugadores por posición")
@@ -258,13 +275,20 @@ with tab_explorar:
     if not posiciones:
         st.info("Elige al menos una posición.")
 
+    # Con las variables por 90 ya unidas: son las que se pueden elegir para ordenar.
     universo = pd.concat(
-        [DATOS[p].assign(modelo=p) for p in (posiciones or P.POSICIONES)],
+        [COMPLETO[p].assign(modelo=p) for p in (posiciones or P.POSICIONES)],
         ignore_index=True)
 
+    # Un multiselect vacío significa «sin filtrar», no «ningún resultado». Además de ser
+    # lo que se espera al vaciar una caja, evita un callejón sin salida: al cambiar de
+    # posición cambian los perfiles disponibles, Streamlit descarta del widget los que ya
+    # no existen y la selección se queda vacía sola. Antes eso dejaba la tabla en blanco
+    # con un «ningún jugador cumple esos filtros» que no explicaba nada.
     perfiles_disp = sorted(universo["perfil"].unique())
-    perfiles = f[1].multiselect("Perfil", perfiles_disp, default=perfiles_disp,
-                                key="exp_perfil")
+    perfiles = (f[1].multiselect("Perfil", perfiles_disp, default=perfiles_disp,
+                                 placeholder="Todos los perfiles", key="exp_perfil")
+                or perfiles_disp)
 
     edad_min = int(universo["age"].min())
     edad_max = int(universo["age"].max())
@@ -275,15 +299,36 @@ with tab_explorar:
     minutos = f[3].slider("Minutos mínimos", 0, min_max, P.MINUTOS_INCLUSION, step=90,
                           key="exp_min")
 
-    ligas = st.multiselect("Liga", sorted(universo["league"].unique()),
-                           default=sorted(universo["league"].unique()), key="exp_liga")
+    g = st.columns([2, 1.3, 1])
+
+    ligas_disp = sorted(universo["league"].unique())
+    ligas = g[0].multiselect("Liga", ligas_disp, default=ligas_disp,
+                             placeholder="Todas las ligas", key="exp_liga") or ligas_disp
+
+    # Solo se puede ordenar por lo que TODAS las posiciones elegidas midieron: pedir
+    # «Save%» en una lista que incluye defensas no tendría respuesta.
+    comunes = perfilado.features_comunes(posiciones or P.POSICIONES)
+    opciones_orden = [MINUTOS_JUGADOS] + comunes
+    orden_por = g[1].selectbox("Ordenar por", opciones_orden, key="exp_orden")
+    descendente = g[2].selectbox("Sentido", ["Mayor a menor", "Menor a mayor"],
+                                 key="exp_sentido") == "Mayor a menor"
+
+    if len(posiciones) > 1:
+        g[1].caption(
+            f"{len(comunes)} variable(s) en común entre "
+            f"{', '.join(P.NOMBRE_POS[p].lower() for p in posiciones)}."
+            + ("  Elige una sola posición para ordenar por todas las suyas."
+               if len(comunes) < 5 else "")
+        )
+
+    col_orden = "Playing Time_Min" if orden_por == MINUTOS_JUGADOS else orden_por
 
     sel = universo[
         universo["perfil"].isin(perfiles)
         & universo["age"].between(*rango_edad)
         & (universo["Playing Time_Min"] >= minutos)
         & universo["league"].isin(ligas)
-    ].sort_values("Playing Time_Min", ascending=False) if posiciones else universo.iloc[:0]
+    ].sort_values(col_orden, ascending=not descendente) if posiciones else universo.iloc[:0]
 
     st.divider()
 
@@ -297,9 +342,18 @@ with tab_explorar:
         c[3].metric("Confianza baja", int((sel["confianza"] == "baja").sum()),
                     help=AYUDA_CONFIANZA)
 
-        st.markdown("**Ordenados por minutos jugados**")
-        tabla_jugadores(sel, ["player", "team", "league", "perfil", "pos", "age",
-                              "Playing Time_Min", "confianza", "dist_centroide"])
+        sentido = "de mayor a menor" if descendente else "de menor a mayor"
+        st.markdown(f"**Ordenados por {orden_por}**, {sentido}")
+
+        # La columna por la que se ordena se muestra siempre, aunque no esté en el
+        # bloque fijo: una tabla ordenada por algo que no se ve no se puede comprobar.
+        columnas = ["player", "team", "league", "perfil", "pos", "age",
+                    "Playing Time_Min"]
+        if col_orden != "Playing Time_Min":
+            columnas.insert(4, col_orden)
+        columnas += ["confianza", "dist_centroide"]
+
+        tabla_jugadores(sel, columnas, destacar=col_orden)
 
         st.markdown("**Edad frente a minutos**")
         usados = sorted(sel["perfil"].unique())

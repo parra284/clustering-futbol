@@ -43,6 +43,32 @@ def etiquetas_features(pos: str) -> list[str]:
     return [_etiqueta(c, not _es_tasa(c)) for c in P.FEATURES[pos]]
 
 
+def features_comunes(posiciones: list[str]) -> list[str]:
+    """Variables de modelo que comparten TODAS las posiciones dadas.
+
+    Cada posición se segmenta con sus propias métricas, así que al mirar varias a la vez
+    solo se puede ordenar por lo que todas midieron: pedir «ordenar por Save%» en una
+    lista que incluye defensas no tiene respuesta. Entre posiciones de campo quedan 7-9
+    variables; en cuanto entran los porteros, solo `Fld/90`.
+
+    El orden es el de la primera posición, para que la lista no baile entre selecciones.
+    """
+    if not posiciones:
+        return []
+    comunes = set.intersection(*(set(etiquetas_features(p)) for p in posiciones))
+    return [e for e in etiquetas_features(posiciones[0]) if e in comunes]
+
+
+def con_por90(df_pos: pd.DataFrame, pos: str) -> pd.DataFrame:
+    """El dataset de una posición con sus variables por 90 añadidas como columnas.
+
+    Las etiquetas cortas (`Int/90`, `Save%`) no chocan con los nombres de FBref
+    (`Performance_Int`, `Performance_Save%`), así que ambas conviven en la misma tabla:
+    las de FBref son totales de temporada y estas son las tasas que vio el modelo.
+    """
+    return df_pos.join(tabla_por90(df_pos, pos))
+
+
 def tabla_por90(df_pos: pd.DataFrame, pos: str) -> pd.DataFrame:
     """Las variables del modelo en unidades reales por 90 minutos.
 

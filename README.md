@@ -95,7 +95,7 @@ streamlit run app/dashboard.py
 |---|---|
 | 🔍 **Jugador** | Buscar por nombre → ficha completa (liga, temporada, equipo, país, edad, minutos), su perfil, sus 5-10 variables en percentiles y por 90, y los 8 jugadores más parecidos |
 | 👥 **Equipo** | La plantilla entera repartida por perfiles, con el reparto de cada línea |
-| 🧭 **Explorar** | Filtrar las 2 509 apariciones por posición, perfil, edad, liga y minutos; tabla ordenada por minutos y dispersión edad/minutos |
+| 🧭 **Explorar** | Filtrar las 2 509 apariciones por posición, perfil, edad, liga y minutos; **ordenar por minutos o por cualquier variable del modelo** (asc./desc.) y dispersión edad/minutos |
 | ⚖️ **Comparar** | Dos jugadores de la misma posición, variable a variable, en percentiles y en cifras reales |
 
 **Tres decisiones de diseño que conviene saber leer:**
@@ -105,6 +105,10 @@ streamlit run app/dashboard.py
   siempre en la tabla de al lado.
 - **Un percentil es dentro de su propia posición.** El 90 de un defensa y el 90 de un
   delantero no significan lo mismo, y por eso solo se comparan jugadores de la misma línea.
+- **Solo se puede ordenar por lo que todas las posiciones elegidas midieron.** Entre
+  posiciones de campo quedan 7-9 variables comunes; si se incluyen porteros, solo
+  `Fld/90`. Para ordenar por las 8 de defensas o las 5 de porteros, elige esa sola
+  posición. Un filtro vacío significa «sin filtrar», no «ningún resultado».
 - **«Parecido» es cercano en las variables del modelo**, no parecido en todo. El modelo
   no mide pases, conducción ni posicionamiento: Rodri y un extremo pueden salir cerca.
 
