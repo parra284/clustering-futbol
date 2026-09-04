@@ -16,6 +16,7 @@ Clustering **por posición** de jugadores de FBref siguiendo el protocolo **CRIS
 
 | Carpeta | Contiene |
 |---|---|
+| `app/` | Dashboard de Streamlit (`dashboard.py`) y sus gráficos (`graficos.py`) |
 | `config/` | Todos los parámetros: rutas, umbrales, variables de cada modelo, `k`, semillas, paleta |
 | `data/raw/` | CSV descargado de FBref (3 512 jugadores × 75 columnas) |
 | `data/processed/` | Base limpia: liga rellenada y filas sin posición eliminadas |
@@ -24,7 +25,6 @@ Clustering **por posición** de jugadores de FBref siguiendo el protocolo **CRIS
 | `notebooks/` | El informe CRISP-DM completo y un espacio de pruebas |
 | `reports/` | 8 CSV generados + `figuras/` con las 15 gráficas |
 | `src/` | Las funciones largas y reutilizables del pipeline |
-| `app/` | Dashboard de Streamlit |
 
 Ningún archivo usa rutas relativas al directorio de trabajo: todo se ancla en `config/rutas.py`.
 
@@ -82,6 +82,35 @@ imputadas por mediana y escaladas con **Yeo-Johnson**.
 
 Los porteros piden 15 porque sus variables son porcentajes, y un porcentaje sobre pocos partidos
 es muy inestable.
+
+---
+
+## El dashboard
+
+```powershell
+streamlit run app/dashboard.py
+```
+
+| Pestaña | Qué permite |
+|---|---|
+| 🔍 **Jugador** | Buscar por nombre → ficha completa (liga, temporada, equipo, país, edad, minutos), su perfil, sus 5-10 variables en percentiles y por 90, y los 8 jugadores más parecidos |
+| 👥 **Equipo** | La plantilla entera repartida por perfiles, con el reparto de cada línea |
+| 🧭 **Explorar** | Filtrar las 2 509 apariciones por posición, perfil, edad, liga y minutos; tabla ordenada por minutos y dispersión edad/minutos |
+| ⚖️ **Comparar** | Dos jugadores de la misma posición, variable a variable, en percentiles y en cifras reales |
+
+**Tres decisiones de diseño que conviene saber leer:**
+
+- **Las comparaciones van en percentiles, no en unidades reales.** `Crs`/90 llega a 5 y
+  `Ast`/90 a 0.5: en un eje común la segunda sería invisible. Las cifras reales están
+  siempre en la tabla de al lado.
+- **Un percentil es dentro de su propia posición.** El 90 de un defensa y el 90 de un
+  delantero no significan lo mismo, y por eso solo se comparan jugadores de la misma línea.
+- **«Parecido» es cercano en las variables del modelo**, no parecido en todo. El modelo
+  no mide pases, conducción ni posicionamiento: Rodri y un extremo pueden salir cerca.
+
+El tema (claro/oscuro) lo resuelve Streamlit; `.streamlit/config.toml` solo fija el color
+de acento al azul del proyecto, porque el rojo por defecto hacía que un percentil 100 se
+leyera como una alarma.
 
 ---
 

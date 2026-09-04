@@ -14,7 +14,8 @@ downloaded_files/
 soccerdata/
 
 # --- Streamlit ---
-.streamlit/
+# .streamlit/config.toml SÍ se versiona: lleva el tema del dashboard.
+.streamlit/secrets.toml
 
 # --- Sistema operativo / editores ---
 .DS_Store

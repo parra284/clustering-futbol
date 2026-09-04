@@ -25,6 +25,35 @@ ESTILO_VIZ = {
 DPI_GUARDADO = 150
 
 
+# ======================================================================================
+# Tema del dashboard (Altair)
+# ======================================================================================
+# Los mismos cuatro tonos de PALETA_POS, más los pasos equivalentes para fondo oscuro.
+# No es un volteo automático del claro: son escalones elegidos para cada superficie.
+# Las dos series de la comparación (slots 1 y 2) están validadas en ambos modos.
+
+TEMA_CLARO = {
+    "posiciones": PALETA_POS,
+    "serie_1": "#2a78d6", "serie_2": "#eb6834",
+    "superficie": "#fcfcfb",
+    "tinta": "#0b0b0b", "tinta2": "#52514e", "apagado": "#898781",
+    "rejilla": "#e1e0d9", "eje": "#c3c2b7",
+}
+
+TEMA_OSCURO = {
+    "posiciones": {"GK": "#3987e5", "DF": "#d95926", "MF": "#199e70", "FW": "#c98500"},
+    "serie_1": "#3987e5", "serie_2": "#d95926",
+    "superficie": "#1a1a19",
+    "tinta": "#ffffff", "tinta2": "#c3c2b7", "apagado": "#898781",
+    "rejilla": "#2c2c2a", "eje": "#383835",
+}
+
+
+def tema(modo: str = "light") -> dict:
+    """Devuelve la paleta del dashboard para 'light' u 'dark'."""
+    return TEMA_OSCURO if modo == "dark" else TEMA_CLARO
+
+
 def aplicar_estilo() -> None:
     """Aplica ESTILO_VIZ a matplotlib. La llama src.visualizacion al importarse."""
     import matplotlib.pyplot as plt

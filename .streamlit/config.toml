@@ -1,0 +1,12 @@
+# Tema del dashboard.
+#
+# El color de acento de Streamlit pinta los botones, los enlaces y las barras de la
+# columna "Percentil". Por defecto es rojo, y un percentil 100 en rojo se lee como una
+# alarma: el rojo está reservado para estado (error, crítico), no para magnitud.
+# Aquí se fija al azul del proyecto — el mismo slot 1 que usan las gráficas.
+
+[theme]
+primaryColor = "#2a78d6"
+
+[browser]
+gatherUsageStats = false
