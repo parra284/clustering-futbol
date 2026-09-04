@@ -1,4 +1,4 @@
-# ⚽ Segmentación de jugadores de fútbol — 5 grandes ligas europeas, 2023-24
+# ⚽ Segmentación de jugadores de fútbol — 5 grandes ligas europeas, 2025-26
 
 Clustering **por posición** de jugadores de FBref siguiendo el protocolo **CRISP-DM**.
 
@@ -6,7 +6,7 @@ Clustering **por posición** de jugadores de FBref siguiendo el protocolo **CRIS
   porteros de jugadores de campo y poco más.
 - **Enfoque.** Cuatro modelos K-Means independientes, uno por línea. Cada jugador se compara solo
   contra los de su propia posición, y con las métricas que definen *esa* posición.
-- **Resultado.** **15 arquetipos** sobre 2 509 apariciones de 1 963 jugadores distintos.
+- **Resultado.** **15 arquetipos** sobre 2 528 apariciones de 1 998 jugadores distintos.
 - **Polivalentes.** Un "DF,MF" entra a los dos modelos y recibe dos etiquetas: qué rol cumple
   según desde qué línea se le mire.
 
@@ -18,7 +18,7 @@ Clustering **por posición** de jugadores de FBref siguiendo el protocolo **CRIS
 |---|---|
 | `app/` | Dashboard de Streamlit (`dashboard.py`) y sus gráficos (`graficos.py`) |
 | `config/` | Todos los parámetros: rutas, umbrales, variables de cada modelo, `k`, semillas, paleta |
-| `data/raw/` | CSV descargado de FBref (3 512 jugadores × 75 columnas) |
+| `data/raw/` | CSV descargado de FBref (3 536 jugadores × 75 columnas), un archivo por temporada |
 | `data/processed/` | Base limpia: liga rellenada y filas sin posición eliminadas |
 | `models/` | Los 4 modelos, uno por archivo, más `entrenar_todos.py` |
 | `models/entrenados/` | Los 4 `.joblib` (imputer + scaler + kmeans + pca) |
@@ -39,6 +39,11 @@ pip install -r requirements.txt
 ```
 
 Python 3.13. No hace falta descargar nada de FBref: `data/raw/` ya viene en el repositorio.
+
+**Para cambiar de temporada** basta con editar `FBREF_TEMPORADAS` en `config/parametros.py`
+(`"2526"` = 2025-26) y reejecutar. El nombre del CSV lleva la temporada dentro, así que el cambio
+dispara una descarga nueva en vez de reutilizar la anterior en silencio. Los 15 nombres de perfil,
+en cambio, **hay que releerlos a mano** tras cada reentrenamiento.
 
 ---
 
@@ -65,12 +70,12 @@ código de `src/`.
 Todos son `KMeans(n_init=10, random_state=42)` sobre variables llevadas a **por 90 minutos**,
 imputadas por mediana y escaladas con **Yeo-Johnson**.
 
-| Modelo | k | Variables | Etiquetados | Entrenan | Umbral entren. | Silueta (entren.) | Silueta (todos) |
-|---|---|---|---|---|---|---|---|
-| **GK** Porteros | 3 | 5 | 137 | 103 | 15 partidos | 0.188 | 0.171 |
-| **DF** Defensas | 3 | 8 | 779 | 645 | 10 partidos | 0.172 | 0.161 |
-| **MF** Mediocampistas | 4 | 10 | 1 097 | 887 | 10 partidos | 0.145 | 0.135 |
-| **FW** Delanteros | 5 | 10 | 496 | 385 | 10 partidos | 0.132 | 0.122 |
+| Modelo | k | Variables | Etiquetados | Entrenan | Umbral entren. | Silueta (entren.) |
+|---|---|---|---|---|---|---|
+| **GK** Porteros | 3 | 5 | 139 | 105 | 15 partidos | 0.210 |
+| **DF** Defensas | 3 | 8 | 735 | 605 | 10 partidos | 0.148 |
+| **MF** Mediocampistas | 4 | 10 | 1 143 | 878 | 10 partidos | 0.133 |
+| **FW** Delanteros | 5 | 10 | 511 | 380 | 10 partidos | 0.109 |
 
 **Dos umbrales, no uno:**
 
@@ -95,7 +100,7 @@ streamlit run app/dashboard.py
 |---|---|
 | 🔍 **Jugador** | Buscar por nombre → ficha completa (liga, temporada, equipo, país, edad, minutos), su perfil, sus 5-10 variables en percentiles y por 90, y los 8 jugadores más parecidos |
 | 👥 **Equipo** | La plantilla entera repartida por perfiles, con el reparto de cada línea |
-| 🧭 **Explorar** | Filtrar las 2 509 apariciones por posición, perfil, edad, liga y minutos; **ordenar por minutos o por cualquier variable del modelo** (asc./desc.) y dispersión edad/minutos |
+| 🧭 **Explorar** | Filtrar las 2 528 apariciones por posición, perfil, edad, liga y minutos; **ordenar por minutos o por cualquier variable del modelo** (asc./desc.) y dispersión edad/minutos |
 | ⚖️ **Comparar** | Dos jugadores de la misma posición, variable a variable, en percentiles y en cifras reales |
 
 **Tres decisiones de diseño que conviene saber leer:**
@@ -122,24 +127,26 @@ leyera como una alarma.
 
 | Posición | Cluster | Perfil | n |
 |---|---|---|---|
-| **Porteros** | 0 | Portero de área | 44 |
-| | 1 | Portero muy exigido | 46 |
-| | 2 | Portero de bloque sólido | 47 |
-| **Defensas** | 0 | Lateral de combate | 216 |
-| | 1 | Central | 321 |
-| | 2 | Carrilero ofensivo | 242 |
-| **Mediocampistas** | 0 | Carrilero | 267 |
-| | 1 | Interior de conducción | 250 |
-| | 2 | Interior ofensivo | 271 |
-| | 3 | Pivote destructor | 309 |
-| **Delanteros** | 0 | Delantero asociativo | 74 |
-| | 1 | Nueve de choque | 124 |
-| | 2 | Extremo de presión | 119 |
-| | 3 | Extremo centrador | 105 |
-| | 4 | Nueve de área | 74 |
+| **Porteros** | 0 | Portero muy exigido | 36 |
+| | 1 | Portero de bloque sólido | 33 |
+| | 2 | Portero de área | 70 |
+| **Defensas** | 0 | Central posicional | 235 |
+| | 1 | Central de combate | 250 |
+| | 2 | Lateral ofensivo | 250 |
+| **Mediocampistas** | 0 | Interior de conducción | 271 |
+| | 1 | Carrilero | 268 |
+| | 2 | Interior ofensivo | 279 |
+| | 3 | Pivote destructor | 325 |
+| **Delanteros** | 0 | Nueve goleador | 101 |
+| | 1 | Nueve de choque | 129 |
+| | 2 | Extremo centrador | 87 |
+| | 3 | Extremo de presión | 94 |
+| | 4 | Extremo regateador | 100 |
 
 Los nombres están en `config/perfiles.py` y se escriben en el CSV al exportar. K-Means **no numera
-igual al reentrenar**: si se cambian los datos o el `k`, hay que revisarlos uno por uno.
+igual al reentrenar**, y el paso de 2023-24 a 2025-26 lo demostró: en porteros la numeración rotó
+entera y en defensas cambió la estructura (de lateral/central/carrilero a dos tipos de central más
+un lateral). Si se reentrena, hay que releerlos uno por uno.
 
 ---
 

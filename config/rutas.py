@@ -21,8 +21,17 @@ FIGURAS = REPORTS / "figuras"
 MODELOS_ENTRENADOS = RAIZ / "models" / "entrenados"
 
 # --- Archivos concretos ---------------------------------------------------------------
-CSV_CRUDO = DATA_RAW / "datos_jugadores_permitidos.csv"
-CSV_BASE = DATA_PROCESSED / "jugadores_base.csv"
+# El nombre lleva la temporada dentro. Con un nombre fijo, cambiar la temporada en
+# config/parametros.py no habría disparado la descarga: `recolectar_datos_permitidos()`
+# habría encontrado el archivo antiguo, lo habría dado por bueno y se habría seguido
+# entrenando con la temporada anterior sin un solo aviso.
+def _sufijo_temporada() -> str:
+    from config import parametros
+    return "_".join(parametros.FBREF_TEMPORADAS)
+
+
+CSV_CRUDO = DATA_RAW / f"datos_jugadores_{_sufijo_temporada()}.csv"
+CSV_BASE = DATA_PROCESSED / f"jugadores_base_{_sufijo_temporada()}.csv"
 
 
 def csv_jugadores(pos: str) -> Path:

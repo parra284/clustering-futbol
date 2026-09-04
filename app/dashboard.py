@@ -5,7 +5,7 @@ Cuatro vistas sobre los resultados que exportan los modelos:
 
   Jugador   · buscar a uno y ver su ficha, su perfil y a quién se parece
   Equipo    · la plantilla completa repartida por perfiles
-  Explorar  · filtrar las 2 509 apariciones por perfil, edad, liga y minutos
+  Explorar  · filtrar las apariciones por perfil, edad, liga y minutos, y ordenarlas
   Comparar  · dos jugadores de la misma posición, variable a variable
 
 Ejecutar con:   streamlit run app/dashboard.py
@@ -85,6 +85,10 @@ AYUDA_DISTANCIA = "Qué tan cerca está del arquetipo. Menor = encaja más limpi
 # Etiqueta de la única opción de orden que no es una variable del modelo.
 MINUTOS_JUGADOS = "Minutos jugados"
 
+# "2526" -> "2025-26". Se deriva de config para que cambiar de temporada no deje textos
+# viejos por la interfaz.
+TEMPORADA = " y ".join(f"20{t[:2]}-{t[2:]}" for t in P.FBREF_TEMPORADAS)
+
 COLS_TABLA = {
     "player": "Jugador", "team": "Equipo", "league": "Liga", "pos": "Posición FBref",
     "age": "Edad", "Playing Time_Min": "Minutos", "perfil": "Perfil",
@@ -116,8 +120,8 @@ def tabla_jugadores(d: pd.DataFrame, columnas: list[str], destacar: str | None =
 
 st.title("⚽ Perfiles de jugadores por posición")
 st.caption(
-    f"5 grandes ligas europeas, temporada 2023-24. Cada jugador se compara solo contra "
-    f"los de su propia posición, con las métricas de esa posición. Un polivalente "
+    f"5 grandes ligas europeas, temporada {TEMPORADA}. Cada jugador se compara solo "
+    f"contra los de su propia posición, con las métricas de esa posición. Un polivalente "
     f"aparece una vez por cada línea en la que se le evaluó."
 )
 
@@ -449,7 +453,7 @@ with tab_comparar:
 st.divider()
 st.caption(
     "Los perfiles salen de cuatro modelos K-Means independientes, uno por posición, "
-    "entrenados sobre las 5 grandes ligas europeas 2023-24. Una etiqueta de "
+    f"entrenados sobre las 5 grandes ligas europeas {TEMPORADA}. Una etiqueta de "
     "*confianza baja* dice que el jugador se parece a ese arquetipo según los minutos "
     "que lleva, no que sea su rol confirmado."
 )

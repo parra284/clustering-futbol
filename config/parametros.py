@@ -14,7 +14,11 @@ ayuda del dashboard) y se quedaban obsoletos en silencio.
 # Tabla combinada de las 5 grandes ligas europeas: La Liga, Ligue 1, Premier League,
 # Serie A y Bundesliga.
 FBREF_LIGAS = ["Big 5 European Leagues Combined"]
-FBREF_TEMPORADAS = ["2324"]
+
+# Temporada en el código de soccerdata: "2526" = 2025-26, ya cerrada (38 jornadas).
+# El nombre del CSV en data/raw/ lleva este código dentro (ver config/rutas.py), así que
+# cambiarlo aquí dispara una descarga nueva en vez de reutilizar la temporada anterior.
+FBREF_TEMPORADAS = ["2526"]
 
 # Tablas que la librería permite actualmente. 'keeper' es imprescindible para el
 # modelo de porteros (paradas, % de parada, goles encajados).
